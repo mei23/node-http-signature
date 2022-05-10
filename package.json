@@ -1,7 +1,7 @@
 {
   "name": "@peertube/http-signature",
   "description": "PeerTube fork of reference implementation of Joyent's HTTP Signature scheme.",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "license": "MIT",
   "author": "Joyent, Inc",
   "contributors": [
