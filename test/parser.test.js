@@ -3,7 +3,7 @@
 var http = require('http');
 
 var test = require('tap').test;
-var uuid = require('uuid');
+var uuid = require('uuid').v4;
 var jsprim = require('jsprim');
 
 var httpSignature = require('../lib/index');
@@ -288,7 +288,7 @@ test('invalid numeric parameter', function(t) {
       res.end();
       return;
     }
-    
+
     t.fail("should throw error");
     res.writeHead(200);
     res.end();
@@ -320,7 +320,7 @@ test('invalid numeric parameter - decimal', function(t) {
       res.end();
       return;
     }
-    
+
     t.fail("should throw error");
     res.writeHead(200);
     res.end();
@@ -352,7 +352,7 @@ test('invalid numeric parameter - signed integer', function(t) {
       res.end();
       return;
     }
-    
+
     t.fail("should throw error");
     res.writeHead(200);
     res.end();
@@ -381,12 +381,12 @@ test('created in future', function(t) {
       httpSignature.parseRequest(req, options);
     } catch (e) {
       t.equal(e.name, 'ExpiredRequestError');
-      t.similar(e.message, new RegExp('Created lies in the future.*'));
+      t.match(e.message, new RegExp('Created lies in the future.*'));
       res.writeHead(200);
       res.end();
       return;
     }
-    
+
     t.fail("should throw error");
     res.writeHead(200);
     res.end();
@@ -416,12 +416,12 @@ test('expires expired', function(t) {
       httpSignature.parseRequest(req, options);
     } catch (e) {
       t.equal(e.name, 'ExpiredRequestError');
-      t.similar(e.message, new RegExp('Request expired.*'));
+      t.match(e.message, new RegExp('Request expired.*'));
       res.writeHead(200);
       res.end();
       return;
     }
-    
+
     t.fail("should throw error");
     res.writeHead(200);
     res.end();
@@ -452,7 +452,7 @@ test('valid created and expires with skew', function(t) {
     } catch (e) {
       t.fail(e.stack);
     }
-    
+
     res.writeHead(200);
     res.end();
   };

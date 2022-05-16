@@ -1,7 +1,7 @@
 {
   "name": "http-signature",
   "description": "Defacto implementation of HTTP Signature scheme.",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "license": "MIT",
   "author": "Joyent, Inc",
   "contributors": [
@@ -35,7 +35,7 @@
     "sshpk": "^1.14.1"
   },
   "devDependencies": {
-    "tap": "0.4.2",
-    "uuid": "^2.0.2"
+    "tap": "^16.2.0",
+    "uuid": "^8.3.2"
   }
 }
