@@ -20,6 +20,7 @@ var rsaPrivate = null;
 var rsaPrivateEncrypted = null;
 var dsaPrivate = null;
 var ecdsaPrivate = null;
+var ed25519Private = null;
 var signOptions = null;
 var server = null;
 var socket = null;
@@ -34,10 +35,27 @@ test('setup', function(t) {
   rsaPrivateEncrypted = fs.readFileSync(__dirname + '/rsa_private_encrypted.pem', 'ascii');
   dsaPrivate = fs.readFileSync(__dirname + '/dsa_private.pem', 'ascii');
   ecdsaPrivate = fs.readFileSync(__dirname + '/ecdsa_private.pem', 'ascii');
+
+  {
+    const { privateKey } = crypto.generateKeyPairSync('ed25519', {
+        publicKeyEncoding: {
+          type: 'spki',
+          format: 'pem'
+        },
+        privateKeyEncoding: {
+          type: 'pkcs8',
+          format: 'pem'
+        }
+    });
+
+    ed25519Private = privateKey;
+  }
+
   t.ok(rsaPrivate);
   t.ok(rsaPrivateEncrypted);
   t.ok(dsaPrivate);
   t.ok(ecdsaPrivate);
+  t.ok(ed25519Private);
 
   socket = '/tmp/.' + uuid();
 
@@ -460,6 +478,22 @@ test('createSigner with sign function', function(t) {
     req.setHeader('authorization', authz);
     req.end();
   });
+});
+
+test('ed25519', function(t) {
+  var req = http.request(httpOptions, function(res) {
+    t.end();
+  });
+  var opts = {
+    keyId: 'unit',
+    key: ed25519Private,
+    algorithm: 'ed25519-sha512'
+  };
+
+  t.ok(httpSignature.sign(req, opts));
+  t.ok(req.getHeader('Authorization'));
+  console.log('> ' + req.getHeader('Authorization'));
+  req.end();
 });
 
 test('tear down', function(t) {
