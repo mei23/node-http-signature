@@ -36,6 +36,6 @@
   },
   "devDependencies": {
     "tap": "^16.2.0",
-    "uuid": "^8.3.2"
+    "uuid": "^9.0.0"
   }
 }
