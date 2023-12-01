@@ -1,7 +1,7 @@
 {
   "name": "http-signature",
   "description": "Defacto implementation of HTTP Signature scheme.",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "license": "MIT",
   "author": "Joyent, Inc",
   "contributors": [

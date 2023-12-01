@@ -24,6 +24,8 @@ var dsaPrivate = null;
 var dsaPublic = null;
 var ecdsaPrivate = null;
 var ecdsaPublic = null;
+var ed25519Private = null;
+var ed25519Public = null;
 var server = null;
 var socket = null;
 
@@ -34,9 +36,27 @@ test('setup', function(t) {
   rsaPrivate = fs.readFileSync(__dirname + '/rsa_private.pem', 'ascii');
   dsaPrivate = fs.readFileSync(__dirname + '/dsa_private.pem', 'ascii');
   ecdsaPrivate = fs.readFileSync(__dirname + '/ecdsa_private.pem', 'ascii');
+
+  {
+    const { publicKey, privateKey } = crypto.generateKeyPairSync('ed25519', {
+        publicKeyEncoding: {
+          type: 'spki',
+          format: 'pem'
+        },
+        privateKeyEncoding: {
+          type: 'pkcs8',
+          format: 'pem'
+        }
+    });
+
+    ed25519Private = privateKey;
+    ed25519Public = publicKey;
+  }
+
   t.ok(rsaPrivate);
   t.ok(dsaPrivate);
   t.ok(ecdsaPrivate);
+  t.ok(ed25519Private);
 
   rsaPublic = fs.readFileSync(__dirname + '/rsa_public.pem', 'ascii');
   dsaPublic = fs.readFileSync(__dirname + '/dsa_public.pem', 'ascii');
@@ -44,6 +64,7 @@ test('setup', function(t) {
   t.ok(rsaPublic);
   t.ok(dsaPublic);
   t.ok(ecdsaPublic);
+  t.ok(ed25519Public);
 
   hmacKey = uuid();
   rawhmacKey = crypto.randomBytes(64);
@@ -291,6 +312,52 @@ test('valid ecdsa', function(t) {
   });
 });
 
+test('invalid ed25519', function(t) {
+  server.tester = function(req, res) {
+    var parsed = httpSignature.parseRequest(req);
+    t.ok(!httpSignature.verify(parsed, ed25519Public));
+
+    res.writeHead(200);
+    res.write(JSON.stringify(parsed, null, 2));
+    res.end();
+  };
+
+  options.headers.Date = jsprim.rfc1123(new Date());
+  options.headers.Authorization =
+    'Signature keyId="foo",algorithm="ed25519-sha512",signature="' +
+    'a'.repeat(86) + '"';
+
+  http.get(options, function(res) {
+    t.equal(res.statusCode, 200);
+    t.end();
+  });
+});
+
+
+test('valid ed25519', function(t) {
+  server.tester = function(req, res) {
+    var parsed = httpSignature.parseRequest(req);
+    t.ok(httpSignature.verify(parsed, ed25519Public));
+
+    res.writeHead(200);
+    res.write(JSON.stringify(parsed, null, 2));
+    res.end();
+  };
+
+  options.headers.Date = jsprim.rfc1123(new Date());
+  var key = sshpk.parsePrivateKey(ed25519Private);
+  var signer = key.createSign('sha512');
+  signer.update('date: ' + options.headers.Date);
+  options.headers.Authorization =
+    'Signature keyId="foo",algorithm="ed25519-sha512",signature="' +
+    signer.sign().toString() + '"';
+
+  http.get(options, function(res) {
+    t.equal(res.statusCode, 200);
+    t.end();
+  });
+});
+
 
 test('invalid hs2019', function(t) {
   server.tester = function(req, res) {
@@ -349,6 +416,30 @@ test('for now invalid hs2019 (valid ecdsa-sha512)', function(t) {
 
   options.headers.Date = jsprim.rfc1123(new Date());
   var key = sshpk.parsePrivateKey(ecdsaPrivate);
+  var signer = key.createSign('sha512');
+  signer.update('date: ' + options.headers.Date);
+  options.headers.Authorization =
+      'Signature keyId="foo",algorithm="hs2019",signature="' +
+      signer.sign().toString() + '"';
+
+  http.get(options, function(res) {
+    t.equal(res.statusCode, 200);
+    t.end();
+  });
+});
+
+test('for now invalid hs2019 (valid ed25519-sha512)', function(t) {
+  server.tester = function(req, res) {
+    var parsed = httpSignature.parseRequest(req);
+    t.ok(httpSignature.verify(parsed, ed25519Public), 'hs2019 ed25519-sha512');
+
+    res.writeHead(200);
+    res.write(JSON.stringify(parsed, null, 2));
+    res.end();
+  };
+
+  options.headers.Date = jsprim.rfc1123(new Date());
+  var key = sshpk.parsePrivateKey(ed25519Private);
   var signer = key.createSign('sha512');
   signer.update('date: ' + options.headers.Date);
   options.headers.Authorization =
