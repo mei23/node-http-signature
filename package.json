@@ -3,7 +3,7 @@
   "description": "Defacto implementation of HTTP Signature scheme.",
   "version": "1.7.0",
   "license": "MIT",
-  "author": "Joyent, Inc",
+  "author": "MNX Cloud (mnx.io)",
   "contributors": [
     "Mark Cavage <mcavage@gmail.com>",
     "David I. Lehn <dil@lehn.org>",
